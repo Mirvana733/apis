@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function esDueno(uid) {
+      return autenticado() && request.auth.uid == uid;
+    }
+
+    function esModerador() {
+      return autenticado() &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'moderador';
+    }
+
+    match /usuarios/{uid} {
+      allow read: if esDueno(uid) || esModerador();
+      allow write: if esDueno(uid);
+    }
+
+    match /verificaciones/{uid} {
+      allow read, write: if esDueno(uid) || esModerador();
+    }
+
+    match /publicaciones/{id} {
+      allow read: if autenticado() &&
+        (resource.data.estadoModeracion == 'aprobado' || resource.data.uidAutor == request.auth.uid);
+      allow create: if esDueno(request.resource.data.uidAutor);
+      allow update, delete: if esDueno(resource.data.uidAutor) || esModerador();
+    }
+
+    match /comentarios/{id} {
+      allow read: if autenticado() &&
+        (resource.data.estadoModeracion == 'aprobado' || resource.data.uidUsuario == request.auth.uid);
+      allow create: if esDueno(request.resource.data.uidUsuario);
+      allow update, delete: if esDueno(resource.data.uidUsuario) || esModerador();
+    }
+  }
+}
