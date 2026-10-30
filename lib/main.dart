@@ -3,17 +3,32 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
+import 'screens/ayuda_screen.dart';
+import 'screens/cambiar_foto_screen.dart';
+import 'screens/cambiar_password_screen.dart';
+import 'screens/configuracion_screen.dart';
+import 'screens/editar_perfil_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/notificaciones_screen.dart';
+import 'screens/perfil_personal_screen.dart';
+import 'screens/politica_informacion_screen.dart';
+import 'screens/privacidad_screen.dart';
 import 'screens/registro_screen.dart';
+import 'screens/top_semana_screen.dart';
 import 'services/weather_service.dart';
-import 'theme/app_colors.dart';
+import 'theme/app_ajustes.dart';
+import 'theme/app_theme.dart';
+import 'theme/app_typography.dart';
+import 'widgets/encabezado_marca.dart';
+import 'widgets/estrella_lulilu.dart';
+import 'widgets/fondo_lulilu.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await AppAjustes.instancia.cargar();
 
   const bool usarEmulador = bool.fromEnvironment('USE_EMULADOR');
 
@@ -29,16 +44,43 @@ class LuliluApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Lulilu',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.blue,
-        ),
-      ),
-      home: const InicioScreen(),
+    return ListenableBuilder(
+      listenable: AppAjustes.instancia,
+      builder: (context, _) {
+        final ajustes = AppAjustes.instancia;
+
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Lulilu',
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ajustes.tema,
+          builder: (context, child) {
+            final media = MediaQuery.of(context);
+
+            return MediaQuery(
+              data: media.copyWith(
+                textScaler: TextScaler.linear(ajustes.escalaTexto),
+              ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+          home: const InicioScreen(),
+          routes: {
+            '/perfil-personal': (context) => const PerfilPersonalScreen(),
+            '/editar-perfil': (context) => const EditarPerfilScreen(),
+            '/cambiar-foto': (context) => const CambiarFotoScreen(),
+            '/cambiar-password': (context) => const CambiarPasswordScreen(),
+            '/privacidad': (context) => const PrivacidadScreen(),
+            '/configuracion': (context) => const ConfiguracionScreen(),
+            '/notificaciones': (context) => const NotificacionesScreen(),
+            '/ayuda': (context) => const AyudaScreen(),
+            '/politica-informacion': (context) =>
+                const PoliticaInformacionScreen(),
+            '/top-semana': (context) => const TopSemanaScreen(),
+          },
+        );
+      },
     );
   }
 }
@@ -81,239 +123,205 @@ class _InicioScreenState extends State<InicioScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.profileBackground1,
-              Color(0xFFF4FCFF),
-              AppColors.profileBackground3,
-            ],
-          ),
-        ),
+      body: FondoLulilu(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 105,
-                  height: 105,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.blueDark,
-                        AppColors.cyanStrong,
-                      ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.lg),
+                    const EncabezadoMarca(
+                      mensaje: 'Conecta, comparte y comunica con respeto.',
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x334A90E2),
-                        blurRadius: 18,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'L',
-                      style: TextStyle(
-                        fontSize: 65,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                const Text(
-                  'Lulilu',
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.blueDark,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                const Text(
-                  'Conecta, comparte y comunica con respeto',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.starFace,
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                if (cargandoClima)
-                  Container(
-                    width: double.infinity,
-                    height: 78,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.cyanStrong,
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  )
-                else if (clima != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x18000000),
-                          blurRadius: 12,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          WeatherService.iconoClima(
-                            clima!['codigo'] as int,
-                            clima!['esDeDia'] as bool,
-                          ),
-                          style: const TextStyle(
-                            fontSize: 38,
-                          ),
-                        ),
-
-                        const SizedBox(width: 15),
-
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Cochabamba',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.blueDark,
-                              ),
-                            ),
-
-                            const SizedBox(height: 3),
-
-                            Text(
-                              '${clima!['temperatura']} °C · '
-                              '${WeatherService.descripcionClima(
-                                clima!['codigo'] as int,
-                              )}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.grey600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height: 30),
-
-                Container(
-                  width: double.infinity,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppColors.blueDark,
-                        AppColors.cyanStrong,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
+                    const SizedBox(height: AppSpacing.xl),
+                    _tarjetaClima(),
+                    const SizedBox(height: AppSpacing.lg),
+                    _bienvenida(scheme),
+                    const SizedBox(height: AppSpacing.xl),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const LoginScreen(),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: AppColors.white,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
                       ),
+                      child: const Text('INICIAR SESIÓN'),
                     ),
-                    child: const Text(
-                      'INICIAR SESIÓN',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton(
+                      onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const RegistroScreen(),
                         ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.blueDark,
-                      side: const BorderSide(
-                        color: AppColors.cyanStrong,
-                        width: 2,
                       ),
-                      backgroundColor: AppColors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
+                      child: const Text('REGISTRARSE'),
                     ),
-                    child: const Text(
-                      'REGISTRARSE',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 15,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            'Un espacio con privacidad y respeto.',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.caption.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bienvenida(ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: EstrellaLulilu(size: 24, color: scheme.secondary),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Un lugar para compartir a tu ritmo',
+                  style: AppTextStyles.title.copyWith(
+                    fontSize: 17,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  'Descubre publicaciones, conversa con la comunidad y participa en el Top de la semana.',
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 14,
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tarjetaClima() {
+    final scheme = Theme.of(context).colorScheme;
+
+    if (cargandoClima) {
+      return Container(
+        height: 82,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainer.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: scheme.outlineVariant),
         ),
+        child: const Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (clima == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Text(
+              WeatherService.iconoClima(
+                clima!['codigo'] as int,
+                clima!['esDeDia'] as bool,
+              ),
+              style: const TextStyle(fontSize: 26),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cochabamba',
+                  style: AppTextStyles.bodyStrong.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  '${clima!['temperatura']} °C · '
+                  '${WeatherService.descripcionClima(clima!['codigo'] as int)}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.water_drop_outlined, color: scheme.primary, size: 20),
+        ],
       ),
     );
   }

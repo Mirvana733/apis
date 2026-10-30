@@ -1,81 +1,42 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // ==========================================
-  // COLORES PRINCIPALES
-  // ==========================================
+  const AppColors._();
 
-  static const Color pink = Colors.pink;
-  static const Color white = Colors.white;
+  static const Color cristal = Color(0xFF83BDE0);
+  static const Color cristalClaro = Color(0xFFBFE3F4);
+  static const Color cristalMedio = Color(0xFF5A9DC8);
+  static const Color cristalProfundo = Color(0xFF3F86B3);
+  static const Color cristalSuave = Color(0xFFD9EDF8);
 
-  // ==========================================
-  // COLORES DE LULILU
-  // ==========================================
+  static const Color perla = Color(0xFFFFFDF7);
+  static const Color perlaSuave = Color(0xFFF7FBFD);
+  static const Color blanco = Color(0xFFFFFFFF);
+  static const Color blancoPuro = Color(0xFFFFFFFF);
 
-  static const Color cyan = Color(0xFF8DEBFF);
-  static const Color green = Color(0xFF9ED9A7);
-  static const Color orange = Color(0xFFFFB27D);
-  static const Color purple = Color(0xFFB39DDB);
+  static const Color estrella = Color(0xFFF6D66B);
+  static const Color estrellaSuave = Color(0xFFFDF2C9);
+  static const Color estrellaFuerte = Color(0xFFD9A521);
+  static const Color estrellaInk = Color(0xFF7A5A00);
 
-  static const Color purpleText = Color(0xFF8B7ED8);
-  static const Color cyanStrong = Color(0xFF55CDE6);
-  static const Color greenStrong = Color(0xFF8BCF9A);
-  static const Color cyanDark = Color(0xFF72C9D9);
-  static const Color purpleDark = Color(0xFF9B82C8);
-  static const Color blue = Color(0xFF4A90E2);
-  static const Color blueDark = Color(0xFF2563EB);
+  static const Color profundo = Color(0xFF234F70);
+  static const Color profundoFuerte = Color(0xFF173B52);
+  static const Color profundoSuave = Color(0xFF4F6B7E);
+  static const Color bordeClaro = Color(0xFFC9DFEA);
+  static const Color bordeMuyClaro = Color(0xFFDCECF3);
 
-  // ==========================================
-  // COLORES ESPECIALES
-  // ==========================================
+  static const Color noche = Color(0xFF0F2433);
+  static const Color nocheProfunda = Color(0xFF0A1B27);
+  static const Color superficieOscura = Color(0xFF173446);
+  static const Color superficieOscuraAlta = Color(0xFF1D3F54);
+  static const Color superficieOscuraMax = Color(0xFF234A61);
+  static const Color bordeOscuro = Color(0xFF35586D);
+  static const Color bordeOscuroSuave = Color(0xFF2A4658);
+  static const Color textoClaro = Color(0xFFEAF5FB);
+  static const Color textoClaroSuave = Color(0xFFB7D2E2);
 
-  static const Color favorite = Color(0xFFFF8A80);
-  static const Color starFace = Color(0xFF526477);
-  static const Color welcomeTitle = Color(0xFF5D6680);
+  static const Color white = Color(0xFFFFFFFF);
 
-  // ==========================================
-  // FONDO DE BIENVENIDA
-  // ==========================================
-
-  static const Color welcomeBackground1 = Color(0xFFEFFFFF);
-  static const Color welcomeBackground2 = Color(0xFFF2FFF5);
-  static const Color welcomeBackground3 = Color(0xFFF8F1FF);
-
-  // ==========================================
-  // COLORES DE LA ESTRELLA
-  // ==========================================
-
-  static const Color starLight = Color(0xFFB8F4FF);
-  static const Color starCyan = Color(0xFF72DDF2);
-
-  // ==========================================
-  // FONDOS
-  // ==========================================
-
-  static const Color mainBackground = Color(0xFFF9FBFC);
-
-  static const Color profileBackground1 = Color(0xFFE8FAFF);
-  static const Color profileBackground2 = Color(0xFFF0FBEF);
-  static const Color profileBackground3 = Color(0xFFF7F0FF);
-
-  static const Color topWeekBackground1 = Color(0xFFFFF4E8);
-  static const Color topWeekBackground2 = Color(0xFFF8F0FF);
-
-  // ==========================================
-  // GRISES
-  // ==========================================
-
-  static const Color grey = Color(0xFF9E9E9E);
-  static const Color grey100 = Color(0xFFF5F5F5);
-  static const Color grey300 = Color(0xFFE0E0E0);
-  static const Color grey500 = Color(0xFF9E9E9E);
-  static const Color grey600 = Color(0xFF757575);
-  static const Color grey700 = Color(0xFF616161);
-
-  // ==========================================
-  // ROJOS
-  // ==========================================
-
-  static const Color redAccent = Color(0xFFFF5252);
-  static const Color redAccentLight = Color(0xFFFF8A80);
+  static const Color success = Color(0xFF2E7D5B);
+  static const Color danger = Color(0xFFC0392B);
 }

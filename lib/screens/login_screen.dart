@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 
 import '../services/notificaciones_service.dart';
 import '../services/weather_service.dart';
-import '../theme/app_colors.dart';
-import 'pantalla_principal.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_typography.dart';
+import '../widgets/encabezado_marca.dart';
+import '../widgets/fondo_lulilu.dart';
+import 'inicio_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,10 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ==========================================
-  // INICIAR SESIÓN
-  // ==========================================
-
   Future<void> iniciarSesion() async {
     FocusScope.of(context).unfocus();
 
@@ -84,20 +83,12 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // ==========================================
-      // INICIAR SESIÓN EN FIREBASE AUTH
-      // ==========================================
-
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: correo,
         password: password,
       );
 
       NotificacionesService.notificarNuevoIngreso();
-
-      // ==========================================
-      // ENTRAR A LA PANTALLA PRINCIPAL
-      // ==========================================
 
       if (!mounted) return;
 
@@ -106,9 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const PantallaPrincipal(),
-        ),
+        MaterialPageRoute(builder: (_) => const InicioShell()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
@@ -121,21 +110,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (e.code == 'invalid-credential' ||
           e.code == 'wrong-password' ||
           e.code == 'user-not-found') {
-        mostrarMensaje(
-          'El correo o la contraseña son incorrectos.',
-        );
+        mostrarMensaje('El correo o la contraseña son incorrectos.');
       } else if (e.code == 'invalid-email') {
-        mostrarMensaje(
-          'El correo electrónico no es válido.',
-        );
+        mostrarMensaje('El correo electrónico no es válido.');
       } else if (e.code == 'user-disabled') {
-        mostrarMensaje(
-          'Esta cuenta está deshabilitada.',
-        );
+        mostrarMensaje('Esta cuenta está deshabilitada.');
       } else {
-        mostrarMensaje(
-          'No se pudo iniciar sesión.',
-        );
+        mostrarMensaje('No se pudo iniciar sesión.');
       }
     } catch (e) {
       if (!mounted) return;
@@ -144,133 +125,135 @@ class _LoginScreenState extends State<LoginScreen> {
         iniciandoSesion = false;
       });
 
-      mostrarMensaje(
-        'Ocurrió un error al iniciar sesión.',
-      );
+      mostrarMensaje('Ocurrió un error al iniciar sesión.');
     }
   }
-
-  // ==========================================
-  // MENSAJE
-  // ==========================================
 
   void mostrarMensaje(String mensaje) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensaje),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(mensaje), behavior: SnackBarBehavior.floating),
     );
   }
 
-  // ==========================================
-  // INTERFAZ
-  // ==========================================
-
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
+      backgroundColor: scheme.surface,
       appBar: AppBar(
-        title: const Text('Iniciar sesión'),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 69, 125, 245),
-                AppColors.cyanStrong,
-                AppColors.orange,
-              ],
-            ),
+        backgroundColor: scheme.surface,
+        title: Text(
+          'Iniciar sesión',
+          style: AppTextStyles.headline.copyWith(
+            fontSize: 24,
+            color: scheme.onSurface,
           ),
         ),
-        foregroundColor: AppColors.white,
       ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Bienvenido a Lulilu ',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.blueDark,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // ==========================================
-            // CLIMA
-            // ==========================================
-
-            if (cargandoClima)
-              const SizedBox(
-                height: 70,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.cyanStrong,
-                    strokeWidth: 2,
-                  ),
-                ),
-              )
-            else if (clima != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 15,
-                ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.profileBackground1,
-                      AppColors.profileBackground3,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
+      body: FondoLulilu(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      WeatherService.iconoClima(
-                        clima!['codigo'] as int,
-                        clima!['esDeDia'] as bool,
+                    const EncabezadoMarca(
+                      compacto: true,
+                      mensaje: 'Nos alegra verte de nuevo.',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _clima(scheme),
+                    const SizedBox(height: AppSpacing.lg),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainer.withValues(alpha: 0.94),
+                        borderRadius: BorderRadius.circular(AppRadius.xxl),
+                        border: Border.all(color: scheme.outlineVariant),
                       ),
-                      style: const TextStyle(
-                        fontSize: 38,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Accede a tu cuenta',
+                            style: AppTextStyles.title.copyWith(
+                              fontSize: 18,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextField(
+                            controller: correoController,
+                            keyboardType: TextInputType.emailAddress,
+                            enabled: !iniciandoSesion,
+                            decoration: const InputDecoration(
+                              labelText: 'Correo electrónico',
+                              prefixIcon: Icon(Icons.alternate_email),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextField(
+                            controller: passwordController,
+                            obscureText: !mostrarPassword,
+                            enabled: !iniciandoSesion,
+                            onSubmitted: (_) => iniciarSesion(),
+                            decoration: InputDecoration(
+                              labelText: 'Contraseña',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    mostrarPassword = !mostrarPassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  mostrarPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          ElevatedButton(
+                            onPressed: iniciandoSesion ? null : iniciarSesion,
+                            child: iniciandoSesion
+                                ? SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: scheme.onSurfaceVariant,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text('INICIAR SESIÓN'),
+                          ),
+                        ],
                       ),
                     ),
-
-                    const SizedBox(width: 15),
-
-                    Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Cochabamba',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.blueDark,
-                          ),
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 15,
+                          color: scheme.onSurfaceVariant,
                         ),
-
-                        const SizedBox(height: 3),
-
-                        Text(
-                          '${clima!['temperatura']} °C · '
-                          '${WeatherService.descripcionClima(
-                            clima!['codigo'] as int,
-                          )}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.grey600,
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            'Tu información está protegida.',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.caption.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
@@ -278,145 +261,85 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
-            const SizedBox(height: 30),
-
-            // ==========================================
-            // CORREO ELECTRÓNICO
-            // ==========================================
-
-            TextField(
-              controller: correoController,
-              keyboardType: TextInputType.emailAddress,
-              enabled: !iniciandoSesion,
-              decoration: InputDecoration(
-                labelText: 'Correo electrónico',
-                prefixIcon: const Icon(
-                  Icons.email_outlined,
-                  color: AppColors.blueDark,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(
-                    color: AppColors.cyanStrong,
-                    width: 2,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(
-                    color: AppColors.cyanStrong,
-                  ),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
             ),
-
-            const SizedBox(height: 20),
-
-            // ==========================================
-            // CONTRASEÑA
-            // ==========================================
-
-            TextField(
-              controller: passwordController,
-              obscureText: !mostrarPassword,
-              enabled: !iniciandoSesion,
-              onSubmitted: (_) => iniciarSesion(),
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                prefixIcon: const Icon(
-                  Icons.lock,
-                  color: AppColors.blueDark,
-                ),
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      mostrarPassword = !mostrarPassword;
-                    });
-                  },
-                  color: AppColors.cyanDark,
-                  icon: Icon(
-                    mostrarPassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(
-                    color: AppColors.cyanStrong,
-                    width: 2,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(
-                    color: AppColors.cyanStrong,
-                  ),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // ==========================================
-            // BOTÓN INICIAR SESIÓN
-            // ==========================================
-
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.blueDark,
-                      AppColors.cyanStrong,
-                      AppColors.orange,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ElevatedButton(
-                  onPressed:
-                      iniciandoSesion ? null : iniciarSesion,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: AppColors.white,
-                    disabledBackgroundColor:
-                        Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: iniciandoSesion
-                      ? const SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: CircularProgressIndicator(
-                            color: AppColors.white,
-                            strokeWidth: 3,
-                          ),
-                        )
-                      : const Text(
-                          'INICIAR SESIÓN',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _clima(ColorScheme scheme) {
+    if (cargandoClima) {
+      return Container(
+        height: 82,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainer.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (clima == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Text(
+              WeatherService.iconoClima(
+                clima!['codigo'] as int,
+                clima!['esDeDia'] as bool,
+              ),
+              style: const TextStyle(fontSize: 26),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cochabamba',
+                  style: AppTextStyles.bodyStrong.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  '${clima!['temperatura']} °C · '
+                  '${WeatherService.descripcionClima(clima!['codigo'] as int)}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.water_drop_outlined, color: scheme.primary, size: 20),
+        ],
       ),
     );
   }

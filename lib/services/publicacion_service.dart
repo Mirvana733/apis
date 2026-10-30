@@ -33,8 +33,7 @@ class PublicacionService {
     if (ofensiva != null) {
       return ResultadoPublicacion(
         estado: 'bloqueado',
-        mensaje:
-            'No se puede subir este contenido porque contiene una palabra ofensiva.',
+        mensaje: 'No se puede subir este contenido porque contiene una palabra ofensiva.',
       );
     }
 
@@ -86,10 +85,12 @@ class PublicacionService {
         ? documentoUsuario.data()
         : <String, dynamic>{};
 
-    final nombreAutor = [
-      datosUsuario?['nombre'],
-      datosUsuario?['apellidoPaterno'],
-    ].whereType<String>().where((valor) => valor.trim().isNotEmpty).join(' ').trim();
+    final nombreAutor =
+        [datosUsuario?['nombre'], datosUsuario?['apellidoPaterno']]
+            .whereType<String>()
+            .where((valor) => valor.trim().isNotEmpty)
+            .join(' ')
+            .trim();
 
     await FirebaseFirestore.instance.collection('publicaciones').add({
       'uidAutor': usuario.uid,
@@ -98,9 +99,29 @@ class PublicacionService {
       'texto': texto,
       'mediaUrl': '',
       'estadoModeracion': 'aprobado',
-      'resultadoModeracion': {'proveedor': 'gemini-worker'},
+      'resultadoModeracion': {'proveedor': 'gemini'},
+      'cuentaPublica': cuentaPublicaDe(datosUsuario),
       'fecha': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Lee si la cuenta es pública desde el documento privado `usuarios/{uid}`.
+  ///
+  /// Se copia a cada publicación porque las reglas impiden que otros usuarios
+  /// lean ese documento. Por defecto una cuenta es pública.
+  static bool cuentaPublicaDe(Map<String, dynamic>? datosUsuario) {
+    final preferencias = datosUsuario?['preferencias'];
+
+    if (preferencias is Map) {
+      final privacidad = preferencias['privacidad'];
+
+      if (privacidad is Map) {
+        final valor = privacidad['perfilPublico'];
+        if (valor is bool) return valor;
+      }
+    }
+
+    return true;
   }
 
   static Future<ResultadoPublicacion> publicarImagen(File imagen) async {
@@ -112,7 +133,9 @@ class PublicacionService {
       );
     }
 
-    final callable = FirebaseFunctions.instance.httpsCallable('crearPublicacion');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'crearPublicacion',
+    );
     final respuesta = await callable.call({'tipo': 'imagen'});
     final data = Map<String, dynamic>.from(respuesta.data as Map);
     final id = data['id'] as String;
@@ -122,10 +145,7 @@ class PublicacionService {
     final ruta = 'publicaciones/${usuario.uid}/$id$extension';
 
     final ref = FirebaseStorage.instance.ref(ruta);
-    await ref.putFile(
-      imagen,
-      SettableMetadata(contentType: contentType),
-    );
+    await ref.putFile(imagen, SettableMetadata(contentType: contentType));
 
     return _esperarVeredicto(id, 'imagen');
   }
@@ -139,7 +159,9 @@ class PublicacionService {
       );
     }
 
-    final callable = FirebaseFunctions.instance.httpsCallable('crearPublicacion');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'crearPublicacion',
+    );
     final respuesta = await callable.call({'tipo': 'video'});
     final data = Map<String, dynamic>.from(respuesta.data as Map);
     final id = data['id'] as String;
@@ -151,10 +173,7 @@ class PublicacionService {
     final ruta = 'publicaciones/${usuario.uid}/$id$extension';
 
     final ref = FirebaseStorage.instance.ref(ruta);
-    await ref.putFile(
-      video,
-      SettableMetadata(contentType: contentType),
-    );
+    await ref.putFile(video, SettableMetadata(contentType: contentType));
 
     return _esperarVeredicto(id, 'video');
   }
@@ -171,7 +190,9 @@ class PublicacionService {
       );
     }
 
-    final callable = FirebaseFunctions.instance.httpsCallable('crearPublicacion');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'crearPublicacion',
+    );
     final respuesta = await callable.call({'tipo': 'audio'});
     final data = Map<String, dynamic>.from(respuesta.data as Map);
     final id = data['id'] as String;
@@ -181,10 +202,7 @@ class PublicacionService {
     final contentType = _contentTypeAudio(extensionFinal);
 
     final ref = FirebaseStorage.instance.ref(ruta);
-    await ref.putFile(
-      audio,
-      SettableMetadata(contentType: contentType),
-    );
+    await ref.putFile(audio, SettableMetadata(contentType: contentType));
 
     return _esperarVeredicto(id, 'audio');
   }
@@ -233,7 +251,8 @@ class PublicacionService {
         case 'bloqueado':
           return ResultadoPublicacion(
             estado: 'bloqueado',
-            mensaje: 'Tu $tipo no puede publicarse porque contiene contenido inapropiado.',
+            mensaje:
+                'Tu $tipo no puede publicarse porque contiene contenido inapropiado.',
           );
         default:
           return ResultadoPublicacion(

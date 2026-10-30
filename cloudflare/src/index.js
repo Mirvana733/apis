@@ -1,3 +1,5 @@
+import { generarTopSemanal } from "./top_semanal.js";
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -234,6 +236,8 @@ export default {
           return enviarCorreo(datos, env);
         case "/moderar":
           return moderarTexto(datos, env);
+        case "/generar-top":
+          return responder({ok: true, ...(await generarTopSemanal(env))});
         default:
           return responder({ok: false, error: "Ruta no encontrada."}, 404);
       }
@@ -241,5 +245,12 @@ export default {
       console.error("Error interno:", error);
       return responder({ok: false, error: "Error interno del Worker."}, 500);
     }
+  },
+
+  // Cron Trigger (ver wrangler.toml). Se ejecuta el domingo a las 12:00 de
+  // Bolivia, cierra la semana en curso y guarda el Top definitivo. No
+  // requiere el plan Blaze de Firebase.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(generarTopSemanal(env));
   },
 };

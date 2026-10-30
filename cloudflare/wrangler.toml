@@ -4,3 +4,8 @@ compatibility_date = "2025-01-01"
 
 [vars]
 REMITENTE = "zambranarojasluzmirvana@gmail.com"
+
+# Domingo 04:00 UTC = domingo 00:00 en Bolivia (UTC-4).
+# Cierra la semana (lunes a sábado) y publica el Top definitivo (inmutable).
+[triggers]
+crons = ["0 4 * * 0"]

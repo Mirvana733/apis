@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../utils/moderacion_local.dart';
 import 'backend_service.dart';
@@ -50,38 +51,41 @@ class ModeracionService {
         ? documentoUsuario.data()
         : <String, dynamic>{};
 
-    final nombreAutor = [
-      datosUsuario?['nombre'],
-      datosUsuario?['apellidoPaterno'],
-    ].whereType<String>().where((valor) => valor.trim().isNotEmpty).join(' ').trim();
+    final nombreAutor =
+        [datosUsuario?['nombre'], datosUsuario?['apellidoPaterno']]
+            .whereType<String>()
+            .where((valor) => valor.trim().isNotEmpty)
+            .join(' ')
+            .trim();
 
     final referencia = await FirebaseFirestore.instance
         .collection('comentarios')
         .add({
-      'uidUsuario': usuario.uid,
-      'publicacionId': publicacionId,
-      'nombreAutor': nombreAutor.isEmpty
-          ? 'Usuario Lulilu'
-          : nombreAutor,
-      'texto': texto,
-      'estadoModeracion': 'aprobado',
-      'fecha': FieldValue.serverTimestamp(),
-    });
+          'uidUsuario': usuario.uid,
+          'publicacionId': publicacionId,
+          'nombreAutor': nombreAutor.isEmpty ? 'Usuario Lulilu' : nombreAutor,
+          'texto': texto,
+          'estadoModeracion': 'aprobado',
+          'fecha': FieldValue.serverTimestamp(),
+        });
 
-    return ResultadoComentario(
-      aprobado: true,
-      motivo: null,
-      id: referencia.id,
-    );
+    if (publicacionId != null && publicacionId.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('publicaciones')
+            .doc(publicacionId)
+            .update({'totalComentarios': FieldValue.increment(1)});
+      } catch (e) {
+        debugPrint('No se pudo actualizar el contador de comentarios: $e');
+      }
+    }
+
+    return ResultadoComentario(aprobado: true, motivo: null, id: referencia.id);
   }
 }
 
 class ResultadoComentario {
-  const ResultadoComentario({
-    required this.aprobado,
-    this.motivo,
-    this.id,
-  });
+  const ResultadoComentario({required this.aprobado, this.motivo, this.id});
 
   final bool aprobado;
   final String? motivo;

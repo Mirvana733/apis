@@ -2,8 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import 'pantalla_principal.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_typography.dart';
+import '../widgets/encabezado_marca.dart';
+import '../widgets/estrella_lulilu.dart';
+import '../widgets/fondo_lulilu.dart';
+import 'inicio_shell.dart';
 
 class BienvenidaScreen extends StatefulWidget {
   const BienvenidaScreen({super.key});
@@ -25,18 +29,13 @@ class _BienvenidaScreenState extends State<BienvenidaScreen>
       duration: const Duration(milliseconds: 2600),
     )..repeat(reverse: true);
 
-    Future.delayed(
-      const Duration(seconds: 4),
-      () {
-        if (!mounted) return;
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => const PantallaPrincipal(),
-          ),
-        );
-      },
-    );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const InicioShell()));
+    });
   }
 
   @override
@@ -47,226 +46,84 @@ class _BienvenidaScreenState extends State<BienvenidaScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.welcomeBackground1,
-              AppColors.welcomeBackground2,
-              AppColors.welcomeBackground3,
-            ],
-          ),
-        ),
-        child: AnimatedBuilder(
-          animation: controlador,
-          builder: (context, child) {
-            final movimiento =
-                math.sin(
-                  controlador.value * math.pi * 2,
-                ) *
-                35;
+    final scheme = Theme.of(context).colorScheme;
 
-            return Stack(
-              children: [
-                Positioned(
-                  left: 35,
-                  top: 130 + movimiento,
-                  child: _estrellita(
-                    tamano: 75,
-                    rotacion: controlador.value * 0.15,
-                  ),
-                ),
-                Positioned(
-                  right: 30,
-                  top: 220 - movimiento,
-                  child: _estrellita(
-                    tamano: 45,
-                    rotacion: -controlador.value * 0.20,
-                  ),
-                ),
-                Positioned(
-                  left: 70,
-                  bottom: 180 - movimiento,
-                  child: _estrellita(
-                    tamano: 40,
-                    rotacion: controlador.value * 0.18,
-                  ),
-                ),
-                Positioned(
-                  right: 70,
-                  bottom: 120 + movimiento,
-                  child: _estrellita(
-                    tamano: 65,
-                    rotacion: -controlador.value * 0.15,
-                  ),
-                ),
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _estrellita(
-                        tamano: 150,
-                        rotacion: controlador.value * 0.10,
-                      ),
-                      const SizedBox(height: 35),
-                      const Text(
-                        '¡Bienvenido a Lulilu!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.welcomeTitle,
+    return Scaffold(
+      body: FondoLulilu(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedBuilder(
+                      animation: controlador,
+                      builder: (context, child) {
+                        final escala =
+                            1 + math.sin(controlador.value * math.pi) * 0.045;
+
+                        return Transform.scale(scale: escala, child: child);
+                      },
+                      child: Container(
+                        width: 86,
+                        height: 86,
+                        decoration: BoxDecoration(
+                          color: scheme.primaryContainer,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: scheme.surface.withValues(alpha: 0.8),
+                            width: 4,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Tu espacio para compartir y conectar 💗',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: AppColors.grey600,
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      const SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.cyan,
+                        child: Center(
+                          child: EstrellaLulilu(
+                            size: 50,
+                            color: scheme.secondary,
+                            conDestello: true,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    EncabezadoMarca(
+                      mensaje: 'Conecta, comparte y comunica con respeto.',
+                      colorTitulo: scheme.onSurface,
+                      colorMensaje: scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Tu espacio para compartir y conectar.',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.body.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: scheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Preparando tu espacio',
+                      style: AppTextStyles.caption.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _estrellita({
-    required double tamano,
-    required double rotacion,
-  }) {
-    return Transform.rotate(
-      angle: rotacion,
-      child: SizedBox(
-        width: tamano,
-        height: tamano,
-        child: CustomPaint(
-          painter: EstrellaPainter(),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: tamano * 0.11,
-                  height: tamano * 0.15,
-                  decoration: const BoxDecoration(
-                    color: AppColors.starFace,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: tamano * 0.09),
-                Container(
-                  width: tamano * 0.11,
-                  height: tamano * 0.15,
-                  decoration: const BoxDecoration(
-                    color: AppColors.starFace,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-}
-
-class EstrellaPainter extends CustomPainter {
-  @override
-  void paint(
-    Canvas canvas,
-    Size size,
-  ) {
-    final centro = Offset(
-      size.width / 2,
-      size.height / 2,
-    );
-
-    final radioExterno = size.width / 2;
-    final radioInterno = radioExterno * 0.45;
-
-    final path = Path();
-
-    for (int i = 0; i < 10; i++) {
-      final angulo =
-          -math.pi / 2 +
-          i * math.pi / 5;
-
-      final radio = i.isEven
-          ? radioExterno
-          : radioInterno;
-
-      final punto = Offset(
-        centro.dx + math.cos(angulo) * radio,
-        centro.dy + math.sin(angulo) * radio,
-      );
-
-      if (i == 0) {
-        path.moveTo(
-          punto.dx,
-          punto.dy,
-        );
-      } else {
-        path.lineTo(
-          punto.dx,
-          punto.dy,
-        );
-      }
-    }
-
-    path.close();
-
-    final pintura = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          AppColors.starLight,
-          AppColors.starCyan,
-        ],
-      ).createShader(
-        Rect.fromLTWH(
-          0,
-          0,
-          size.width,
-          size.height,
-        ),
-      );
-
-    canvas.drawPath(
-      path,
-      pintura,
-    );
-  }
-
-  @override
-  bool shouldRepaint(
-    CustomPainter oldDelegate,
-  ) {
-    return false;
   }
 }

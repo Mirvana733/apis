@@ -18,14 +18,11 @@ class BackendService {
     required String destinatario,
     String nombre = '',
   }) {
-    return _post(
-      '/email',
-      {
-        'tipo': tipo,
-        'destinatario': destinatario,
-        'nombre': nombre,
-      },
-    );
+    return _post('/email', {
+      'tipo': tipo,
+      'destinatario': destinatario,
+      'nombre': nombre,
+    });
   }
 
   static Future<Map<String, dynamic>> moderarTexto({
@@ -53,8 +50,9 @@ class BackendService {
     final dynamic cuerpo = jsonDecode(respuesta.body);
 
     if (cuerpo is! Map<String, dynamic> || cuerpo['ok'] != true) {
-      final mensaje =
-          cuerpo is Map<String, dynamic> ? (cuerpo['error'] as String?) : null;
+      final mensaje = cuerpo is Map<String, dynamic>
+          ? (cuerpo['error'] as String?)
+          : null;
 
       throw Exception(mensaje ?? 'Error del servidor.');
     }

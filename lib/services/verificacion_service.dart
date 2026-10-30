@@ -10,10 +10,7 @@ class ResultadoVerificacion {
   final bool aprobado;
   final String mensaje;
 
-  const ResultadoVerificacion({
-    required this.aprobado,
-    required this.mensaje,
-  });
+  const ResultadoVerificacion({required this.aprobado, required this.mensaje});
 }
 
 class VerificacionService {
@@ -37,19 +34,26 @@ class VerificacionService {
     final uid = usuario.uid;
 
     final rutaCI = 'usuarios/$uid/identidad/fotoCI${extensionMedia(fotoCI)}';
-    final rutaSelfie = 'usuarios/$uid/identidad/selfie${extensionMedia(selfie)}';
+    final rutaSelfie =
+        'usuarios/$uid/identidad/selfie${extensionMedia(selfie)}';
 
-    await FirebaseStorage.instance.ref(rutaCI).putFile(
+    await FirebaseStorage.instance
+        .ref(rutaCI)
+        .putFile(
           fotoCI,
           SettableMetadata(contentType: contentTypeMedia(fotoCI)),
         );
 
-    await FirebaseStorage.instance.ref(rutaSelfie).putFile(
+    await FirebaseStorage.instance
+        .ref(rutaSelfie)
+        .putFile(
           selfie,
           SettableMetadata(contentType: contentTypeMedia(selfie)),
         );
 
-    final callable = FirebaseFunctions.instance.httpsCallable('verificarIdentidad');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'verificarIdentidad',
+    );
 
     final respuesta = await callable.call({
       'nombre': nombre,
@@ -66,9 +70,7 @@ class VerificacionService {
 
     return ResultadoVerificacion(
       aprobado: aprobado,
-      mensaje: aprobado
-          ? '¡Identidad verificada! Tu cuenta queda confirmada.'
-          : 'No se pudo verificar tu identidad. Revisa que el número de tu CI y que la selfie coincida con la foto del documento.',
+      mensaje: aprobado ? '¡Identidad verificada! Tu cuenta queda confirmada.' : 'No se pudo verificar tu identidad. Revisa que el número de tu CI y que la selfie coincida con la foto del documento.',
     );
   }
 }

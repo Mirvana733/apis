@@ -451,6 +451,14 @@ exports.verificarIdentidad = onCall(
   },
 );
 
+// Copia la privacidad de la cuenta a la publicación, porque las reglas de
+// Firestore impiden que otros usuarios lean `usuarios/{uid}`. Por defecto,
+// una cuenta es pública.
+function esCuentaPublica(datosUsuario) {
+  const privacidad = datosUsuario?.preferencias?.privacidad;
+  return privacidad?.perfilPublico !== false;
+}
+
 exports.crearPublicacion = onCall(async (request) => {
   if (!request.auth) {
     throw new https.HttpsError("unauthenticated", "Debes iniciar sesión.");
@@ -495,6 +503,7 @@ exports.crearPublicacion = onCall(async (request) => {
     mediaUrl,
     estadoModeracion: "en_revision",
     resultadoModeracion: null,
+    cuentaPublica: esCuentaPublica(datosAutor),
     fecha: FieldValue.serverTimestamp(),
     expiraEn,
   });
@@ -628,6 +637,7 @@ exports.moderarTextoPublicacion = onCall(
         mediaUrl: "",
         estadoModeracion: "aprobado",
         resultadoModeracion: {proveedor: "gemini"},
+        cuentaPublica: esCuentaPublica(datosAutor),
         fecha: FieldValue.serverTimestamp(),
       });
 

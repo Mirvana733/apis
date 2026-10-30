@@ -59,8 +59,9 @@ String? palabraOfensiva(String texto) {
 
   if (normalizado.isEmpty) return null;
 
-  final palabras =
-      normalizado.split(RegExp(r'[^a-z0-9]+')).where((p) => p.isNotEmpty);
+  final palabras = normalizado
+      .split(RegExp(r'[^a-z0-9]+'))
+      .where((p) => p.isNotEmpty);
 
   for (final palabra in palabras) {
     if (_palabrasOfensivas.contains(palabra)) return palabra;

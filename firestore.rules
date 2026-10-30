@@ -15,9 +15,139 @@ service cloud.firestore {
         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'moderador';
     }
 
+    function esAmistadAceptada(id) {
+      return exists(/databases/$(database)/documents/amistades/$(id)) &&
+        get(/databases/$(database)/documents/amistades/$(id)).data.estado == 'aceptada';
+    }
+
+    function esAmigo(primero, segundo) {
+      return esAmistadAceptada(primero + '--' + segundo) ||
+        esAmistadAceptada(segundo + '--' + primero);
+    }
+
+    function puntuacionValida(valor) {
+      return valor is int && valor >= 1 && valor <= 5;
+    }
+
+    function fechaDiaValida(valor) {
+      return valor is timestamp &&
+        valor.toMillis() % 86400000 == 14400000;
+    }
+
     match /usuarios/{uid} {
       allow read: if esDueno(uid) || esModerador();
       allow write: if esDueno(uid);
+    }
+
+    // Datos mínimos visibles para búsqueda, amistades y estrellas.
+    // No contiene teléfono, correo, fecha de nacimiento ni preferencias privadas.
+    match /perfilesPublicos/{uid} {
+      allow read: if autenticado();
+      allow write: if esDueno(uid);
+    }
+
+    // Una pareja estable de usuarios. La baja de amistad es lógica.
+    match /amistades/{id} {
+      allow read: if autenticado() && request.auth.uid in resource.data.participantes;
+
+      allow create: if autenticado() &&
+        request.resource.data.participantes is list &&
+        request.resource.data.participantes.size() == 2 &&
+        request.auth.uid in request.resource.data.participantes &&
+        request.resource.data.solicitante == request.auth.uid &&
+        request.resource.data.destinatario in request.resource.data.participantes &&
+        request.resource.data.destinatario != request.auth.uid &&
+        request.resource.data.estado == 'pendiente' &&
+        request.resource.data.claveVoto is string &&
+        request.resource.data.claveVoto.size() > 0;
+
+      allow update: if autenticado() &&
+        request.auth.uid in resource.data.participantes &&
+        (
+          (
+            resource.data.estado == 'pendiente' &&
+            request.resource.data.estado in ['aceptada', 'rechazada', 'eliminada'] &&
+            (
+              request.resource.data.estado != 'aceptada' ||
+              request.auth.uid == resource.data.destinatario
+            ) &&
+            (
+              request.resource.data.estado != 'rechazada' ||
+              request.auth.uid == resource.data.destinatario
+            ) &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['estado', 'actualizadoEn'])
+          ) ||
+          (
+            resource.data.estado in ['rechazada', 'eliminada'] &&
+            request.resource.data.estado == 'pendiente' &&
+            request.resource.data.solicitante == request.auth.uid &&
+            request.resource.data.destinatario != request.auth.uid &&
+            request.resource.data.participantes == resource.data.participantes &&
+            request.resource.data.claveVoto == resource.data.claveVoto &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'participantes',
+                'solicitante',
+                'destinatario',
+                'estado',
+                'claveVoto',
+                'creadoEn',
+                'actualizadoEn'
+              ])
+          )
+        );
+
+      allow delete: if autenticado() &&
+        request.auth.uid in resource.data.participantes;
+    }
+
+    // Calificación actual privada y su historial diario.
+    match /calificaciones/{calificadoUid}/votos/{calificadorUid} {
+      allow read: if esDueno(calificadorUid);
+
+      allow create, update: if esDueno(calificadorUid) &&
+        calificadorUid != calificadoUid &&
+        esAmigo(calificadorUid, calificadoUid) &&
+        request.resource.data.calificadorUid == calificadorUid &&
+        request.resource.data.calificadoUid == calificadoUid &&
+        puntuacionValida(request.resource.data.puntuacion) &&
+        fechaDiaValida(request.resource.data.fechaDia);
+
+      allow delete: if esDueno(calificadorUid);
+
+      match /historial/{fechaId} {
+        allow read: if esDueno(calificadorUid);
+
+        allow create, update: if esDueno(calificadorUid) &&
+          calificadorUid != calificadoUid &&
+          esAmigo(calificadorUid, calificadoUid) &&
+          puntuacionValida(request.resource.data.puntuacion) &&
+          fechaDiaValida(request.resource.data.fechaDia) &&
+          fechaId == string(request.resource.data.fechaDia.toMillis());
+
+        allow delete: if esDueno(calificadorUid);
+      }
+    }
+
+    // Mapa anónimo de votos. La clave es aleatoria por amistad, no un UID.
+    match /reputacionesPublicas/{uid} {
+      allow read: if autenticado();
+      allow delete: if esDueno(uid);
+
+      allow create: if autenticado() &&
+        request.auth.uid != uid &&
+        esAmigo(request.auth.uid, uid) &&
+        request.resource.data.keys().hasOnly(['uid', 'votos', 'actualizadoEn']) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.votos is map;
+
+      allow update: if autenticado() &&
+        request.auth.uid != uid &&
+        esAmigo(request.auth.uid, uid) &&
+        request.resource.data.votos is map &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['votos', 'actualizadoEn']);
     }
 
     match /verificaciones/{uid} {
@@ -28,7 +158,11 @@ service cloud.firestore {
       allow read: if autenticado() &&
         (resource.data.estadoModeracion == 'aprobado' || resource.data.uidAutor == request.auth.uid);
       allow create: if esDueno(request.resource.data.uidAutor);
-      allow update, delete: if esDueno(resource.data.uidAutor) || esModerador();
+      allow update: if esDueno(resource.data.uidAutor) || esModerador() ||
+        (autenticado() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['totalMeGusta', 'totalComentarios']));
+      allow delete: if esDueno(resource.data.uidAutor) || esModerador();
     }
 
     match /comentarios/{id} {
@@ -36,6 +170,20 @@ service cloud.firestore {
         (resource.data.estadoModeracion == 'aprobado' || resource.data.uidUsuario == request.auth.uid);
       allow create: if esDueno(request.resource.data.uidUsuario);
       allow update, delete: if esDueno(resource.data.uidUsuario) || esModerador();
+    }
+
+    // Un documento por usuario y publicación: {publicacionId}_{uid}.
+    // Se usa para el Top de la semana y para el contador de "Me gusta".
+    match /meGusta/{id} {
+      allow read: if autenticado();
+      allow create: if esDueno(request.resource.data.uidUsuario);
+      allow delete: if esDueno(resource.data.uidUsuario);
+    }
+
+    // Resultado semanal generado por el servidor (Cloudflare Cron / Admin SDK).
+    // Los usuarios solo pueden leerlo; el Worker escribe sin pasar por reglas.
+    match /topSemanal/{id} {
+      allow read: if autenticado();
     }
   }
 }

@@ -7,7 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/notificaciones_service.dart';
-import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_typography.dart';
+import '../widgets/estrella_lulilu.dart';
+import '../widgets/fondo_lulilu.dart';
 import 'bienvenida_screen.dart';
 
 class RegistroScreen extends StatefulWidget {
@@ -207,23 +210,17 @@ class _RegistroScreenState extends State<RegistroScreen> {
     }
 
     if (fechaNacimiento == null) {
-      mostrarMensaje(
-        'Selecciona tu fecha de nacimiento.',
-      );
+      mostrarMensaje('Selecciona tu fecha de nacimiento.');
       return;
     }
 
     if (fotoCI == null) {
-      mostrarMensaje(
-        'Debes agregar una foto de tu CI.',
-      );
+      mostrarMensaje('Debes agregar una foto de tu CI.');
       return;
     }
 
     if (!camaraActiva) {
-      mostrarMensaje(
-        'Debes realizar la verificación de identidad.',
-      );
+      mostrarMensaje('Debes realizar la verificación de identidad.');
       return;
     }
 
@@ -238,11 +235,11 @@ class _RegistroScreenState extends State<RegistroScreen> {
       // 1. CREAR USUARIO EN FIREBASE AUTH
       // ==============================
 
-      final credencial =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: correoController.text.trim(),
-        password: passwordController.text,
-      );
+      final credencial = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: correoController.text.trim(),
+            password: passwordController.text,
+          );
 
       usuarioCreado = credencial.user;
 
@@ -258,18 +255,18 @@ class _RegistroScreenState extends State<RegistroScreen> {
           .collection('usuarios')
           .doc(usuarioCreado.uid)
           .set({
-        'uid': usuarioCreado.uid,
-        'nombre': nombreController.text.trim(),
-        'apellidoPaterno': paternoController.text.trim(),
-        'apellidoMaterno': maternoController.text.trim(),
-        'fechaNacimiento': Timestamp.fromDate(fechaNacimiento!),
-        'correo': correoController.text.trim(),
-        'numero': numeroController.text.trim(),
-        'rol': 'usuario',
-        'verificacionIdentidad': false,
-        'estadoVerificacion': 'pendiente',
-        'fechaRegistro': FieldValue.serverTimestamp(),
-      });
+            'uid': usuarioCreado.uid,
+            'nombre': nombreController.text.trim(),
+            'apellidoPaterno': paternoController.text.trim(),
+            'apellidoMaterno': maternoController.text.trim(),
+            'fechaNacimiento': Timestamp.fromDate(fechaNacimiento!),
+            'correo': correoController.text.trim(),
+            'numero': numeroController.text.trim(),
+            'rol': 'usuario',
+            'verificacionIdentidad': false,
+            'estadoVerificacion': 'pendiente',
+            'fechaRegistro': FieldValue.serverTimestamp(),
+          });
 
       if (mounted) {
         await cerrarCamara();
@@ -293,21 +290,15 @@ class _RegistroScreenState extends State<RegistroScreen> {
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
-            title: const Text(
-              '¡Registro exitoso! 🎉',
-            ),
-            content: const Text(
-              'Tu cuenta fue creada correctamente.',
-            ),
+            title: const Text('¡Registro exitoso! 🎉'),
+            content: const Text('Tu cuenta fue creada correctamente.'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
 
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => const BienvenidaScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const BienvenidaScreen()),
                   );
                 },
                 child: const Text('Continuar'),
@@ -324,21 +315,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
       }
 
       if (e.code == 'email-already-in-use') {
-        mostrarMensaje(
-          'Ese correo ya está registrado.',
-        );
+        mostrarMensaje('Ese correo ya está registrado.');
       } else if (e.code == 'invalid-email') {
-        mostrarMensaje(
-          'El correo electrónico no es válido.',
-        );
+        mostrarMensaje('El correo electrónico no es válido.');
       } else if (e.code == 'weak-password') {
-        mostrarMensaje(
-          'La contraseña es demasiado débil.',
-        );
+        mostrarMensaje('La contraseña es demasiado débil.');
       } else {
-        mostrarMensaje(
-          'No se pudo crear la cuenta.',
-        );
+        mostrarMensaje('No se pudo crear la cuenta.');
       }
     } on FirebaseException catch (e) {
       if (usuarioCreado != null) {
@@ -375,9 +358,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
         });
       }
 
-      mostrarMensaje(
-        'Ocurrió un error durante el registro.',
-      );
+      mostrarMensaje('Ocurrió un error durante el registro.');
     }
   }
 
@@ -389,10 +370,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensaje),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(mensaje), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -409,22 +387,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
     String? Function(String?)? validator,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          filled: true,
-          fillColor: AppColors.grey100,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
-        ),
+        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       ),
     );
   }
@@ -434,47 +403,58 @@ class _RegistroScreenState extends State<RegistroScreen> {
   // ==============================
 
   Widget tarjetaFotoCI() {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.grey100,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.grey300,
-        ),
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
-                Icons.badge_outlined,
-                color: Color.fromARGB(255, 30, 50, 233),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  Icons.badge_outlined,
+                  color: scheme.onPrimaryContainer,
+                  size: 20,
+                ),
               ),
-              SizedBox(width: 10),
-              Text(
-                'Foto de tu CI',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Foto de tu CI',
+                  style: AppTextStyles.title.copyWith(
+                    fontSize: 16,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             'La imagen se utilizará temporalmente para la verificación de identidad y no se guardará como parte de tu perfil.',
-            style: TextStyle(
-              color: AppColors.grey700,
+            style: AppTextStyles.caption.copyWith(
+              color: scheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: AppSpacing.sm),
           if (fotoCI != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               child: Image.file(
                 fotoCI!,
                 width: double.infinity,
@@ -482,22 +462,21 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-          if (fotoCI != null)
-            const SizedBox(height: 12),
+          if (fotoCI != null) const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: tomarFotoCI,
-                  icon: const Icon(Icons.camera_alt),
+                  icon: const Icon(Icons.camera_alt_outlined),
                   label: const Text('Tomar foto'),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: subirFotoCI,
-                  icon: const Icon(Icons.photo_library),
+                  icon: const Icon(Icons.photo_library_outlined),
                   label: const Text('Subir'),
                 ),
               ),
@@ -513,101 +492,98 @@ class _RegistroScreenState extends State<RegistroScreen> {
   // ==============================
 
   Widget tarjetaVerificacion() {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.grey100,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.grey300,
-        ),
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
-                Icons.face,
-                color: Color.fromARGB(255, 44, 30, 233),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: scheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  Icons.face_outlined,
+                  color: scheme.onSecondaryContainer,
+                  size: 21,
+                ),
               ),
-              SizedBox(width: 10),
-              Text(
-                'Verificación de identidad',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Verificación de identidad',
+                  style: AppTextStyles.title.copyWith(
+                    fontSize: 16,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             'Realiza la verificación mediante la cámara frontal.',
-            style: TextStyle(
-              color: AppColors.grey700,
+            style: AppTextStyles.caption.copyWith(
+              color: scheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: AppSpacing.sm),
           if (!camaraActiva)
             SizedBox(
               width: double.infinity,
-              height: 50,
               child: ElevatedButton.icon(
-                onPressed: iniciandoCamara
-                    ? null
-                    : abrirVerificacionIdentidad,
+                onPressed: iniciandoCamara ? null : abrirVerificacionIdentidad,
                 icon: iniciandoCamara
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
                         child: CircularProgressIndicator(
+                          // Botón deshabilitado mientras abre la cámara.
+                          color: scheme.onSurfaceVariant,
                           strokeWidth: 2,
-                          color: AppColors.white,
                         ),
                       )
-                    : const Icon(Icons.face),
+                    : const Icon(Icons.face_outlined),
                 label: Text(
                   iniciandoCamara
                       ? 'Abriendo cámara...'
                       : 'VERIFICACIÓN DE IDENTIDAD',
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 86, 89, 245),
-                  foregroundColor: AppColors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
                 ),
               ),
             ),
           if (camaraActiva &&
               cameraController != null &&
               cameraController!.value.isInitialized) ...[
-            const SizedBox(height: 5),
+            const SizedBox(height: AppSpacing.xxs),
             ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               child: AspectRatio(
                 aspectRatio: cameraController!.value.aspectRatio,
-                child: CameraPreview(
-                  cameraController!,
-                ),
+                child: CameraPreview(cameraController!),
               ),
             ),
-            const SizedBox(height: 12),
-            const Center(
-              child: Text(
-                'Coloca tu rostro frente a la cámara.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.grey,
-                ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Coloca tu rostro frente a la cámara.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption.copyWith(
+                color: scheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -628,254 +604,282 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        backgroundColor: scheme.surface,
+        title: Text(
           'Crear cuenta',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: AppTextStyles.headline.copyWith(
+            fontSize: 24,
+            color: scheme.onSurface,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 168, 220, 250),
-        foregroundColor: AppColors.white,
       ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '¡Bienvenido a Lulilu! ',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Completa tus datos para crear tu cuenta.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.grey700,
-                  ),
-                ),
-                const SizedBox(height: 25),
-
-                campoTexto(
-                  controller: nombreController,
-                  label: 'Nombre',
-                  icon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa tu nombre';
-                    }
-                    return null;
-                  },
-                ),
-
-                campoTexto(
-                  controller: paternoController,
-                  label: 'Apellido paterno',
-                  icon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa tu apellido paterno';
-                    }
-                    return null;
-                  },
-                ),
-
-                campoTexto(
-                  controller: maternoController,
-                  label: 'Apellido materno',
-                  icon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa tu apellido materno';
-                    }
-                    return null;
-                  },
-                ),
-
-                const Text(
-                  'Fecha de nacimiento',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                InkWell(
-                  onTap: seleccionarFecha,
-                  borderRadius: BorderRadius.circular(15),
-                  child: Container(
+      body: FondoLulilu(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 18,
-                    ),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
-                      color: AppColors.grey100,
-                      borderRadius: BorderRadius.circular(15),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          scheme.primaryContainer,
+                          scheme.surfaceContainer,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.xxl),
+                      border: Border.all(color: scheme.outlineVariant),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.calendar_month,
-                          color: Color.fromARGB(255, 146, 157, 250),
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: scheme.surface.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: Center(
+                            child: EstrellaLulilu(
+                              size: 26,
+                              color: scheme.secondary,
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          fechaNacimiento == null
-                              ? 'Seleccionar fecha'
-                              : '${fechaNacimiento!.day.toString().padLeft(2, '0')}/'
-                                '${fechaNacimiento!.month.toString().padLeft(2, '0')}/'
-                                '${fechaNacimiento!.year}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: fechaNacimiento == null
-                                ? AppColors.grey600
-                                : Colors.black,
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '¡Bienvenido a Lulilu!',
+                                style: AppTextStyles.headline.copyWith(
+                                  fontSize: 22,
+                                  color: scheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xxs),
+                              Text(
+                                'Completa tus datos para crear tu cuenta.',
+                                style: AppTextStyles.body.copyWith(
+                                  fontSize: 14,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.lg),
 
-                const SizedBox(height: 20),
+                  campoTexto(
+                    controller: nombreController,
+                    label: 'Nombre',
+                    icon: Icons.person_outline,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa tu nombre';
+                      }
+                      return null;
+                    },
+                  ),
 
-                campoTexto(
-                  controller: correoController,
-                  label: 'Correo electrónico',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa tu correo';
-                    }
+                  campoTexto(
+                    controller: paternoController,
+                    label: 'Apellido paterno',
+                    icon: Icons.person_outline,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa tu apellido paterno';
+                      }
+                      return null;
+                    },
+                  ),
 
-                    if (!value.contains('@')) {
-                      return 'Ingresa un correo válido';
-                    }
+                  campoTexto(
+                    controller: maternoController,
+                    label: 'Apellido materno',
+                    icon: Icons.person_outline,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa tu apellido materno';
+                      }
+                      return null;
+                    },
+                  ),
 
-                    return null;
-                  },
-                ),
-
-                campoTexto(
-                  controller: numeroController,
-                  label: 'Número de celular',
-                  icon: Icons.phone_outlined,
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa tu número';
-                    }
-
-                    if (value.length < 7) {
-                      return 'Ingresa un número válido';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                tarjetaFotoCI(),
-
-                tarjetaVerificacion(),
-
-                campoTexto(
-                  controller: passwordController,
-                  label: 'Contraseña',
-                  icon: Icons.lock_outline,
-                  obscureText: !mostrarPassword,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Ingresa una contraseña';
-                    }
-
-                    if (value.length < 6) {
-                      return 'Mínimo 6 caracteres';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                Row(
-                  children: [
-                    Checkbox(
-                      value: mostrarPassword,
-                      onChanged: (value) {
-                        setState(() {
-                          mostrarPassword = value ?? false;
-                        });
-                      },
+                  Text(
+                    'Fecha de nacimiento',
+                    style: AppTextStyles.bodyStrong.copyWith(
+                      color: scheme.onSurface,
                     ),
-                    const Text(
-                      'Mostrar contraseña',
-                    ),
-                  ],
-                ),
+                  ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.xs),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: registrando
-                        ? null
-                        : registrarUsuario,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 54, 95, 207),
-                      foregroundColor: const Color.fromARGB(255, 188, 241, 245),
-                      disabledBackgroundColor: AppColors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                  InkWell(
+                    onTap: seleccionarFecha,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
                       ),
-                    ),
-                    child: registrando
-                        ? const SizedBox(
-                            width: 25,
-                            height: 25,
-                            child: CircularProgressIndicator(
-                              color: AppColors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : const Text(
-                            'REGISTRARSE',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(color: scheme.outline),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_month_outlined),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              fechaNacimiento == null
+                                  ? 'Seleccionar fecha'
+                                  : '${fechaNacimiento!.day.toString().padLeft(2, '0')}/'
+                                        '${fechaNacimiento!.month.toString().padLeft(2, '0')}/'
+                                        '${fechaNacimiento!.year}',
+                              style: AppTextStyles.body.copyWith(
+                                color: fechaNacimiento == null
+                                    ? scheme.onSurfaceVariant
+                                    : scheme.onSurface,
+                              ),
                             ),
                           ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      '¿Ya tienes una cuenta? Inicia sesión',
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 20),
-              ],
+                  const SizedBox(height: AppSpacing.md),
+
+                  campoTexto(
+                    controller: correoController,
+                    label: 'Correo electrónico',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa tu correo';
+                      }
+
+                      if (!value.contains('@')) {
+                        return 'Ingresa un correo válido';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  campoTexto(
+                    controller: numeroController,
+                    label: 'Número de celular',
+                    icon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresa tu número';
+                      }
+
+                      if (value.length < 7) {
+                        return 'Ingresa un número válido';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  tarjetaFotoCI(),
+
+                  tarjetaVerificacion(),
+
+                  campoTexto(
+                    controller: passwordController,
+                    label: 'Contraseña',
+                    icon: Icons.lock_outline,
+                    obscureText: !mostrarPassword,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Ingresa una contraseña';
+                      }
+
+                      if (value.length < 6) {
+                        return 'Mínimo 6 caracteres';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: mostrarPassword,
+                        onChanged: (value) {
+                          setState(() {
+                            mostrarPassword = value ?? false;
+                          });
+                        },
+                      ),
+                      Text(
+                        'Mostrar contraseña',
+                        style: AppTextStyles.body.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: registrando ? null : registrarUsuario,
+                      child: registrando
+                          ? SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                // Botón deshabilitado durante el registro.
+                                color: scheme.onSurfaceVariant,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : const Text('REGISTRARSE'),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('¿Ya tienes una cuenta? Inicia sesión'),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+              ),
             ),
           ),
         ),
